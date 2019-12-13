@@ -1,0 +1,8 @@
+version: '3'
+services:
+  go_app:
+    build: .
+    volumes:
+      - ./src:/go/src/work
+    tty: true
+    stdin_open: true
