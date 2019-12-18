@@ -1,8 +1,8 @@
 version: '3'
 services:
-  go_app:
+  app:
     build: .
     volumes:
-      - ./src:/go/src/work
+      - ./src:/go/src
     tty: true
     stdin_open: true
