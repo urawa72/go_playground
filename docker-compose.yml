@@ -3,6 +3,6 @@ services:
   app:
     build: .
     volumes:
-      - ./src:/go/src
+      - ./src:/work
     tty: true
     stdin_open: true

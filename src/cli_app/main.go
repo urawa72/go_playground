@@ -4,19 +4,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 )
 
+// RootCmd is root command
+
 func main() {
-	app := cli.NewApp()
-	app.Name = "test"
-	app.Usage = "command"
-	app.Version = "0.0.1"
+	RootCmd := &cobra.Command{
+		Use:   "culc",
+		Short: "command line calculator",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("root command")
+		},
+    }
 
-	app.Action = func(context *cli.Context) error {
-		fmt.Println(context.Args().Get(0))
-		return nil
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+		os.Exit(-1)
 	}
-
-	app.Run(os.Args)
 }
