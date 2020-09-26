@@ -10,10 +10,6 @@ import (
 )
 
 func main() {
-    // sess := session.Must(session.NewSessionWithOptions(session.Options{
-    //     Profile: "kobayashi.yuki",
-    //     SharedConfigState: session.SharedConfigEnable,
-    // }))
     sess := session.Must(session.NewSession())
 
     svc := dynamodb.New(
