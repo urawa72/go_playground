@@ -1,8 +1,6 @@
 package gui
 
 import (
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
     "github.com/rivo/tview"
 )
@@ -24,12 +22,9 @@ func NewTableList() *TableList {
     t.SetBorder(true).SetTitle("tests").SetTitleAlign(tview.AlignLeft)
 
     input := &dynamodb.ListTablesInput{}
-    result, err := Client.ListTables(input)
-    if err != nil {
-        panic(err)
-    }
+    result, _ := Client.ListTables(input)
 
-	table := t.Clear()
+    table := t.Clear()
 	for i, name := range result.TableNames {
 		table.SetCell(i, 0, tview.NewTableCell(*name))
 		t.dbTables = append(t.dbTables, *name)

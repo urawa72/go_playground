@@ -2,35 +2,67 @@ package main
 
 import (
 	"fmt"
+    "encoding/json"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-    "gopkg.in/AlecAivazis/survey.v1"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 func main() {
-    sess := session.Must(session.NewSession())
+    sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Profile: "default",
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	params := &dynamodb.ScanInput{
+		TableName: aws.String("hoge"),
+	}
 
     svc := dynamodb.New(
-        sess,
-        aws.NewConfig().WithRegion("ap-northeast-1"),
-    )
+		sess,
+		aws.NewConfig().WithEndpoint("http://localhost:8000"),
+	)
 
-    input := &dynamodb.ListTablesInput{}
-    result, err := svc.ListTables(input)
+	tableName := "hoge"
+	input := &dynamodb.DescribeTableInput{ TableName: &tableName }
+    result2, err := svc.DescribeTable(input)
     if err != nil {
         panic(err)
     }
-    fmt.Println(result)
+	fmt.Println(result2)
 
-    color := ""
-    prompt := &survey.Select{
-        Message: "Choose a color:",
-        Options: []string{"red", "blue", "green"},
-    }
-    survey.AskOne(prompt, &color, nil)
+	result, err := svc.Scan(params)
+	if err != nil {
+		panic(err)
+	}
 
-    fmt.Println(color)
+    items := []Item{}
 
+	for _, item := range result.Items {
+		var i Item
+		err = dynamodbattribute.UnmarshalMap(item, &i.Data)
+		if err != nil {
+			panic(err)
+		}
+		items = append(items, i)
+	}
+
+	for _, item := range items {
+		for _, v := range item.Data {
+			j, err := json.Marshal(v)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(reflect.TypeOf(v))
+			fmt.Println(string(j))
+			// fmt.Println(v)
+		}
+	}
+}
+
+type Item struct {
+	Data map[string]interface{}
 }

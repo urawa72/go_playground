@@ -4,5 +4,5 @@ go 1.15
 
 require (
 	github.com/aws/aws-sdk-go v1.34.24
-	gopkg.in/AlecAivazis/survey.v1 v1.8.8
+	github.com/davecgh/go-spew v1.1.1 // indirect
 )

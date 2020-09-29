@@ -1,10 +1,6 @@
 package gui
 
 import (
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/rivo/tview"
 )
 
@@ -22,50 +18,52 @@ func NewText1() *Text1 {
 	return tx
 }
 
-func (tx *Text1) UpdateView(g *Gui) {
-	tableName := g.TableList.Selected()
-	tx.scanItems(tableName)
-	// tx.SetText()
-}
-
-func (tx *Text1) scanItems(name string) {
-
-	params := &dynamodb.ScanInput{
-		TableName: aws.String(name),
-	}
-
-	result, err := Client.Scan(params)
-	if err != nil {
-		panic(err)
-	}
-
-    items := []Item{}
-
-	for _, item := range result.Items {
-		var i Item
-		err = dynamodbattribute.UnmarshalMap(item, &i.Data)
-		if err != nil {
-			panic(err)
-		}
-		items = append(items, i)
-	}
-
-	for _, item := range items {
-		for k, v := range item.Data {
-			fmt.Println(k, v)
-			// tx.SetText(k)
-            // switch v := v.(type) {
-			// case string:
-			// 	tx.SetText(v)
-			// case []string:
-			// 	tx.SetText(v[0])
-			// }
-		}
-	}
-
-
-}
-
-type Item struct {
-	Data map[string]interface{}
-}
+// func (tx *Text1) UpdateView(g *Gui) {
+// 	tableName := g.TableList.Selected()
+// 	tx.scanItems(tableName)
+// 	// tx.SetText()
+// }
+//
+// func (tx *Text1) scanItems(name string) {
+//
+// 	params := &dynamodb.ScanInput{
+// 		TableName: aws.String(name),
+// 	}
+//
+// 	result, err := Client.Scan(params)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+//     items := []Item{}
+//
+// 	for _, item := range result.Items {
+// 		var i Item
+// 		err = dynamodbattribute.UnmarshalMap(item, &i.Data)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		items = append(items, i)
+// 	}
+//
+//     t := tview.NewTable().Select(0, 0).SetFixed(1, 1).SetSelectable(true, false)
+//     t.SetBorder(true).SetTitleAlign(tview.AlignLeft)
+//
+// 	for _, item := range items {
+// 		for _, v := range item.Data {
+// 			fmt.Println(v)
+// 			// tx.SetText(k)
+//             // switch v := v.(type) {
+// 			// case string:
+// 			// 	tx.SetText(v)
+// 			// case []string:
+// 			// 	tx.SetText(v[0])
+// 			// }
+// 		}
+// 	}
+//
+// }
+//
+// type Item struct {
+// 	Data map[string]interface{}
+// }

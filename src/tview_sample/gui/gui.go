@@ -9,7 +9,7 @@ type Gui struct {
 	App			*tview.Application
 	Pages		*tview.Pages
 	TableList	*TableList
-	Text1		*Text1
+	Records		*Records
 	Text2		*tview.TextView
 	Header		*tview.TextView
 	Footer		*tview.TextView
@@ -41,7 +41,7 @@ func (g *Gui) globalKeybind(event *tcell.EventKey) {
 func (g *Gui) tableListKeybind() {
 	g.TableList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEnter {
-			g.Text1.UpdateView(g)
+			g.Records.UpdateView(g)
 		}
 		g.globalKeybind(event)
 		return event
@@ -59,7 +59,8 @@ func New() *Gui {
 
 	tableList := NewTableList()
 
-	text1 := NewText1()
+	// text1 := NewText1()
+	records := NewRecords()
 
 	text2 := tview.NewTextView().SetDynamicColors(true)
     text2.SetTitleAlign(tview.AlignLeft).SetTitle("Main 1").SetBorder(true)
@@ -69,7 +70,7 @@ func New() *Gui {
 	g := &Gui {
 		App:	tview.NewApplication(),
 		TableList:	tableList,
-		Text1:		text1,
+		Records: 	records,
 		Text2:		text2,
 		Header: 	header,
 		Footer:		footer,
@@ -78,7 +79,7 @@ func New() *Gui {
 	g.Panels = Panels{
 		Panels: []tview.Primitive{
 			tableList,
-			text1,
+			records,
 			text2,
 		},
 	}
@@ -89,7 +90,7 @@ func New() *Gui {
 func (g *Gui) Run() error {
 	mainGrid := tview.NewGrid().SetRows(0, 0, 0).SetColumns(30, 0).
 		AddItem(g.TableList, 0, 0, 3, 1, 0, 0, true).
-		AddItem(g.Text1, 0, 1, 1, 1, 0, 0, true).
+		AddItem(g.Records, 0, 1, 1, 1, 0, 0, true).
 		AddItem(g.Text2, 1, 1, 2, 1, 0, 0, true)
 
 	grid := tview.NewGrid().
@@ -103,7 +104,7 @@ func (g *Gui) Run() error {
 
 	g.tableListKeybind()
 
-	g.Text1.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	g.Records.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		g.globalKeybind(event)
 		return event
 	})
