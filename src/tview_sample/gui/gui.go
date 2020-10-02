@@ -10,7 +10,7 @@ type Gui struct {
 	Pages		*tview.Pages
 	TableList	*TableList
 	Records		*Records
-	Text2		*tview.TextView
+	ItemDetail	*ItemDetail
 	Header		*tview.TextView
 	Footer		*tview.TextView
 	Panels
@@ -48,6 +48,26 @@ func (g *Gui) tableListKeybind() {
 	})
 }
 
+func (g *Gui) recordsKeybindings() {
+    g.Records.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		g.globalKeybind(event)
+		return event
+	})
+ 	g.Records.SetSelectionChangedFunc(func(row, col int) {
+		if row < 1 {
+			return
+		}
+		g.ItemDetail.UpdateView(g)
+	})
+}
+
+func (g *Gui) itemDetailKeybinding() {
+	g.ItemDetail.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		g.globalKeybind(event)
+		return event
+	})
+}
+
 func New() *Gui {
 	header := tview.NewTextView().SetDynamicColors(true)
     header.SetTitleAlign(tview.AlignLeft).SetTitle("Header")
@@ -59,19 +79,15 @@ func New() *Gui {
 
 	tableList := NewTableList()
 
-	// text1 := NewText1()
 	records := NewRecords()
 
-	text2 := tview.NewTextView().SetDynamicColors(true)
-    text2.SetTitleAlign(tview.AlignLeft).SetTitle("Main 1").SetBorder(true)
-	text2.SetWrap(false)
-
+	itemDetail := NewItemDetail()
 
 	g := &Gui {
-		App:	tview.NewApplication(),
+		App:		tview.NewApplication(),
 		TableList:	tableList,
 		Records: 	records,
-		Text2:		text2,
+		ItemDetail:	itemDetail,
 		Header: 	header,
 		Footer:		footer,
 	}
@@ -80,7 +96,7 @@ func New() *Gui {
 		Panels: []tview.Primitive{
 			tableList,
 			records,
-			text2,
+			itemDetail,
 		},
 	}
 
@@ -91,7 +107,7 @@ func (g *Gui) Run() error {
 	mainGrid := tview.NewGrid().SetRows(0, 0, 0).SetColumns(30, 0).
 		AddItem(g.TableList, 0, 0, 3, 1, 0, 0, true).
 		AddItem(g.Records, 0, 1, 1, 1, 0, 0, true).
-		AddItem(g.Text2, 1, 1, 2, 1, 0, 0, true)
+		AddItem(g.ItemDetail, 1, 1, 2, 1, 0, 0, true)
 
 	grid := tview.NewGrid().
 		SetRows(1, 0, 2).
@@ -103,16 +119,8 @@ func (g *Gui) Run() error {
 	g.Pages = tview.NewPages().AddAndSwitchToPage("main", grid, true)
 
 	g.tableListKeybind()
-
-	g.Records.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		g.globalKeybind(event)
-		return event
-	})
-
-	g.Text2.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		g.globalKeybind(event)
-		return event
-	})
+	g.recordsKeybindings()
+	g.itemDetailKeybinding()
 
 	if err := g.App.SetRoot(g.Pages, true).SetFocus(g.TableList).Run(); err != nil {
 		g.App.Stop()

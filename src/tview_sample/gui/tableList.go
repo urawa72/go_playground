@@ -7,12 +7,12 @@ import (
 
 type TableList struct {
 	*tview.Table
-	dbTables []string
+	Tables []string
 }
 
 func (t *TableList) Selected() string {
 	row, _ := t.GetSelection()
-	return t.dbTables[row]
+	return t.Tables[row]
 }
 
 func NewTableList() *TableList {
@@ -27,7 +27,7 @@ func NewTableList() *TableList {
     table := t.Clear()
 	for i, name := range result.TableNames {
 		table.SetCell(i, 0, tview.NewTableCell(*name))
-		t.dbTables = append(t.dbTables, *name)
+		t.Tables = append(t.Tables, *name)
 	}
 
 	return t
