@@ -3,10 +3,12 @@ package gui
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/deckarep/golang-set"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -28,7 +30,7 @@ var header = []string{
 
 func NewRecords() *Records {
 	r := &Records{
-		Table: tview.NewTable().Select(0, 0).SetSelectable(true, false),
+		Table: tview.NewTable().Select(0, 0).SetSelectable(true, true),
 	}
     r.SetBorder(true).SetTitleAlign(tview.AlignLeft)
 	return r
@@ -70,33 +72,6 @@ func (r *Records) scanItems(name string) {
 		}
 	}
 
-	// mp := map[string]*KeyDetail{}
-	// list := tableDetail.Table.AttributeDefinitions
-	// for _, l := range list {
-	// 	if hashKey == *l.AttributeName {
-	// 		mp[hashKey] = &KeyDetail{
-	// 			KeyType: "HASH",
-	// 			AttributeType: l.AttributeType,
-	// 		}
-	// 	}
-	// 	if sortKey == *l.AttributeName {
-	// 		mp[sortKey] = &KeyDetail{
-	// 			KeyType: "SORT",
-	// 			AttributeType: l.AttributeType,
-	// 		}
-	// 	}
-	// }
-
-	t := r.Clear()
-	for i, h := range header {
-		t.SetCell(0, i, &tview.TableCell{
-			Text:				h,
-			NotSelectable:		true,
-			Align:				tview.AlignLeft,
-			Color:				tcell.ColorYellow,
-			BackgroundColor:	tcell.ColorDefault,
-		})
-	}
 
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(name),
@@ -119,24 +94,95 @@ func (r *Records) scanItems(name string) {
 		r.Items = append(r.Items, i)
 	}
 
+	keys := mapset.NewSet()
+	for _, item := range r.Items {
+		for k, _ := range item.Data {
+			keys.Add(k)
+		}
+	}
+	keyArray := keys.ToSlice()
+	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
+
+	t := r.Clear()
+	// for i, h := range header {
+	// 	t.SetCell(0, i, &tview.TableCell{
+	// 		Text:				h,
+	// 		NotSelectable:		true,
+	// 		Align:				tview.AlignLeft,
+	// 		Color:				tcell.ColorYellow,
+	// 		BackgroundColor:	tcell.ColorDefault,
+	// 	})
+	// }
+
+	c := 0
+	t.SetCell(0, c, &tview.TableCell{
+		Text:				hashKey,
+		NotSelectable:		true,
+		Align:				tview.AlignLeft,
+		Color:				tcell.ColorYellow,
+		BackgroundColor:	tcell.ColorDefault,
+	})
+	if sortKey != "" {
+		c++
+		t.SetCell(0, c, &tview.TableCell{
+			Text:				sortKey,
+			NotSelectable:		true,
+			Align:				tview.AlignLeft,
+			Color:				tcell.ColorYellow,
+			BackgroundColor:	tcell.ColorDefault,
+		})
+	}
+	for i, h := range keyArray {
+		t.SetCell(0, c+i, &tview.TableCell{
+			Text:				h.(string),
+			NotSelectable:		true,
+			Align:				tview.AlignLeft,
+			Color:				tcell.ColorYellow,
+			BackgroundColor:	tcell.ColorDefault,
+		})
+	}
+
 	for i, item := range r.Items {
-		var hKey string
-		var sKey string
-		for k, v := range item.Data {
-			j, err := json.Marshal(v)
-			if err != nil {
-				panic(err)
+		c := 0
+		t.SetCell(i+1, c, tview.NewTableCell(item.Data[hashKey].(string)))
+		if sortKey != "" {
+			c++
+			t.SetCell(i+1, c, tview.NewTableCell(item.Data[sortKey].(string)))
+		}
+		for j, key := range keyArray {
+			if key == hashKey || key == sortKey {
+				continue
 			}
-			if hashKey == string(k) {
-				hKey = string(j)
-			}
-			if sortKey == string(k) {
-				sKey = string(j)
+			if item.Data[key.(string)] == nil {
+				t.SetCell(i+1, c+j, tview.NewTableCell(""))
+			} else {
+				json, err := json.Marshal(item.Data[key.(string)])
+				if err != nil {
+					panic(err)
+				}
+				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)))
 			}
 		}
-		t.SetCell(i+1, 0, tview.NewTableCell(hKey))
-		t.SetCell(i+1, 1, tview.NewTableCell(sKey))
 	}
+
+	// for i, item := range r.Items {
+	// 	var hKey string
+	// 	var sKey string
+	// 	for k, v := range item.Data {
+	// 		j, err := json.Marshal(v)
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 		if hashKey == string(k) {
+	// 			hKey = string(j)
+	// 		}
+	// 		if sortKey == string(k) {
+	// 			sKey = string(j)
+	// 		}
+	// 	}
+	// 	t.SetCell(i+1, 0, tview.NewTableCell(hKey))
+	// 	t.SetCell(i+1, 1, tview.NewTableCell(sKey))
+	// }
 }
 
 type Item struct {

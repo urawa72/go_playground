@@ -53,12 +53,12 @@ func (g *Gui) recordsKeybindings() {
 		g.globalKeybind(event)
 		return event
 	})
- 	g.Records.SetSelectionChangedFunc(func(row, col int) {
-		if row < 1 {
-			return
-		}
-		g.ItemDetail.UpdateView(g)
-	})
+ 	// g.Records.SetSelectionChangedFunc(func(row, col int) {
+	// 	if row < 1 {
+	// 		return
+	// 	}
+	// 	g.ItemDetail.UpdateView(g)
+	// })
 }
 
 func (g *Gui) itemDetailKeybinding() {
