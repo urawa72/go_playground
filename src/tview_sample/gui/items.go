@@ -55,7 +55,6 @@ func (r *Records) UpdateView(g *Gui) {
 }
 
 func (r *Records) scanItems(name string) {
-
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	}
@@ -71,7 +70,6 @@ func (r *Records) scanItems(name string) {
 			sortKey = *s.AttributeName
 		}
 	}
-
 
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(name),
@@ -104,15 +102,6 @@ func (r *Records) scanItems(name string) {
 	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
 
 	t := r.Clear()
-	// for i, h := range header {
-	// 	t.SetCell(0, i, &tview.TableCell{
-	// 		Text:				h,
-	// 		NotSelectable:		true,
-	// 		Align:				tview.AlignLeft,
-	// 		Color:				tcell.ColorYellow,
-	// 		BackgroundColor:	tcell.ColorDefault,
-	// 	})
-	// }
 
 	c := 0
 	t.SetCell(0, c, &tview.TableCell{

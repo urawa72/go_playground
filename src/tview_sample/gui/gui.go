@@ -40,10 +40,6 @@ func (g *Gui) globalKeybind(event *tcell.EventKey) {
 	}
 }
 
-func hoge() {
-	fmt.Println("Called")
-}
-
 func (g *Gui) tableListKeybind() {
 	g.TableList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEnter {
@@ -51,7 +47,7 @@ func (g *Gui) tableListKeybind() {
 		}
         switch event.Rune() {
         case 'P':
-			g.PutItem("Modal Test", "OK", g.TableList, hoge)
+			g.PutItem("Modal Test", "OK", g.TableList)
 		}
 		g.globalKeybind(event)
 		return event
@@ -73,19 +69,38 @@ func (g *Gui) itemDetailKeybinding() {
 	})
 }
 
-func (g *Gui) PutItem(message, doneLabel string, primitive tview.Primitive, doneFunc func()) {
+func convertParams(f *tview.Form) {
+	cnt := f.GetFormItemCount()
+	for i := 0; i < cnt; i++ {
+		item := f.GetFormItem(i)
+		switch item.(type) {
+		case *tview.InputField:
+			text := item.(*tview.InputField).GetText()
+			fmt.Println(len(text))
+		case *tview.DropDown:
+			label, index := item.(*tview.DropDown).GetCurrentOption()
+			fmt.Println(label, index)
+		}
+	}
+}
+
+func (g *Gui) PutItem(message, doneLabel string, primitive tview.Primitive) {
 	options := []string{"String", "Number", "Binary"}
 	form := tview.NewForm()
 	form.SetBorder(true)
 	form.SetTitleAlign(tview.AlignLeft)
 	form.SetTitle("Put Item")
-    form.AddInputField("Hash Key", "", 80, nil, nil).
-    	AddInputField("Sort Key", "", 80, nil, nil).
+    form.AddInputField("Hash Key       ", "", 80, nil, nil).
+    	AddInputField("Sort Key       ", "", 80, nil, nil).
 		AddButton("Add", func() {
 			form.AddInputField("Attribute Name", "", 80, nil, nil).
 				AddDropDown("Attribute Type", options, 0, func(option string, index int) {
 				}).
 				AddInputField("Value", "", 80, nil, nil)
+		}).
+		AddButton("Execute", func() {
+			convertParams(form)
+			g.CloseAndSwitchPanel("form", g.TableList)
 		}).
 		AddButton("Cancel", func() {
 			g.CloseAndSwitchPanel("form", g.TableList)
