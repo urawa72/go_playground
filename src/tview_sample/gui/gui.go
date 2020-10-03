@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -38,27 +40,30 @@ func (g *Gui) globalKeybind(event *tcell.EventKey) {
 	}
 }
 
+func hoge() {
+	fmt.Println("Called")
+}
+
 func (g *Gui) tableListKeybind() {
 	g.TableList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEnter {
 			g.Records.UpdateView(g)
+		}
+        switch event.Rune() {
+        case 'P':
+			g.PutItem("Modal Test", "OK", g.TableList, hoge)
 		}
 		g.globalKeybind(event)
 		return event
 	})
 }
 
+
 func (g *Gui) recordsKeybindings() {
     g.Records.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		g.globalKeybind(event)
 		return event
 	})
- 	// g.Records.SetSelectionChangedFunc(func(row, col int) {
-	// 	if row < 1 {
-	// 		return
-	// 	}
-	// 	g.ItemDetail.UpdateView(g)
-	// })
 }
 
 func (g *Gui) itemDetailKeybinding() {
@@ -66,6 +71,39 @@ func (g *Gui) itemDetailKeybinding() {
 		g.globalKeybind(event)
 		return event
 	})
+}
+
+func (g *Gui) PutItem(message, doneLabel string, primitive tview.Primitive, doneFunc func()) {
+	options := []string{"String", "Number", "Binary"}
+	form := tview.NewForm()
+	form.SetBorder(true)
+	form.SetTitleAlign(tview.AlignLeft)
+	form.SetTitle("Put Item")
+    form.AddInputField("Hash Key", "", 80, nil, nil).
+    	AddInputField("Sort Key", "", 80, nil, nil).
+		AddButton("Add", func() {
+			form.AddInputField("Attribute Name", "", 80, nil, nil).
+				AddDropDown("Attribute Type", options, 0, func(option string, index int) {
+				}).
+				AddInputField("Value", "", 80, nil, nil)
+		}).
+		AddButton("Cancel", func() {
+			g.CloseAndSwitchPanel("form", g.TableList)
+		})
+
+	g.Pages.AddAndSwitchToPage("form", g.Modal(form, 50, 29), true).ShowPage("main")
+}
+
+func (g *Gui) CloseAndSwitchPanel(removePrimitive string, primitive tview.Primitive) {
+	g.Pages.RemovePage(removePrimitive).ShowPage("main")
+	g.switchPanel(primitive)
+}
+
+func (g *Gui) Modal(p tview.Primitive, width, height int) tview.Primitive {
+	return tview.NewGrid().
+		SetColumns(0, width, 0).
+		SetRows(0, height, 0).
+		AddItem(p, 1, 1, 1, 1, 0, 0, true)
 }
 
 func New() *Gui {
