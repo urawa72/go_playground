@@ -15,7 +15,7 @@ func NewItemDetail() *ItemDetail {
 	i := &ItemDetail{
 		TextView: tview.NewTextView().SetTextAlign(tview.AlignRight).SetDynamicColors(true),
 	}
-	i.SetTitleAlign(tview.AlignLeft).SetTitle("Item Detail").SetBorder(true)
+	i.SetTitleAlign(tview.AlignLeft).SetTitle("Info").SetBorder(true)
 	i.SetWrap(false)
 	return i
 }

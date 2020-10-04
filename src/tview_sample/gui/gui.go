@@ -159,15 +159,13 @@ func New() *Gui {
 func (g *Gui) Run() error {
 	mainGrid := tview.NewGrid().SetRows(0, 0, 0).SetColumns(30, 0).
 		AddItem(g.TableList, 0, 0, 3, 1, 0, 0, true).
-		AddItem(g.Records, 0, 1, 1, 1, 0, 0, true).
-		AddItem(g.ItemDetail, 1, 1, 2, 1, 0, 0, true)
+		AddItem(g.Records, 0, 1, 2, 1, 0, 0, true).
+		AddItem(g.ItemDetail, 2, 1, 1, 1, 0, 0, true)
 
 	grid := tview.NewGrid().
-		SetRows(1, 0, 2).
+		SetRows(0).
 		SetColumns(30).
-		AddItem(g.Header, 0, 0, 1, 1, 0, 0, true).
-		AddItem(mainGrid, 1, 0, 1, 2, 0, 0, true).
-		AddItem(g.Footer, 2, 0, 1, 2, 0, 0, true)
+		AddItem(mainGrid, 0, 0, 1, 2, 0, 0, true)
 
 	g.Pages = tview.NewPages().AddAndSwitchToPage("main", grid, true)
 

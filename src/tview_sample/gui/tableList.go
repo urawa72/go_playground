@@ -19,7 +19,7 @@ func NewTableList() *TableList {
 	t := &TableList{
 		Table: tview.NewTable().Select(0, 0).SetFixed(1, 1).SetSelectable(true, false),
 	}
-    t.SetBorder(true).SetTitle("tests").SetTitleAlign(tview.AlignLeft)
+    t.SetBorder(true).SetTitle("Tables").SetTitleAlign(tview.AlignLeft)
 
     input := &dynamodb.ListTablesInput{}
     result, _ := Client.ListTables(input)

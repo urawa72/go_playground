@@ -32,7 +32,7 @@ func NewRecords() *Records {
 	r := &Records{
 		Table: tview.NewTable().Select(0, 0).SetSelectable(true, true),
 	}
-    r.SetBorder(true).SetTitleAlign(tview.AlignLeft)
+    r.SetBorder(true).SetTitle("Items").SetTitleAlign(tview.AlignLeft)
 	return r
 }
 
