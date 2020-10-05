@@ -11,6 +11,7 @@ type Gui struct {
 	Pages		*tview.Pages
 	Tables		*Tables
 	Items		*Items
+	ItemDetail	*ItemDetail
 	Info		*Info
 	Header		*tview.TextView
 	Footer		*tview.TextView
@@ -29,6 +30,18 @@ func (g *Gui) switchPanel(p tview.Primitive) *tview.Application {
 func (g *Gui) nextPanel() {
 	idx := (g.Panels.Current + 1) % len(g.Panels.Panels)
 	g.Panels.Current = idx
+	g.switchPanel(g.Panels.Panels[g.Panels.Current])
+}
+
+func (g *Gui) prevPanel() {
+	g.Panels.Current--
+
+	if g.Panels.Current < 0 {
+		g.Current = len(g.Panels.Panels) - 1
+	} else {
+		idx := (g.Panels.Current) % len(g.Panels.Panels)
+		g.Panels.Current = idx
+	}
 	g.switchPanel(g.Panels.Panels[g.Panels.Current])
 }
 
@@ -97,13 +110,15 @@ func New() *Gui {
 
 	items := NewItems()
 
-	info := NewInfo()
+	// info := NewInfo()
+	itemDetail := NewItemDetail()
 
 	g := &Gui {
 		App:		tview.NewApplication(),
 		Tables:		tables,
 		Items: 		items,
-		Info:		info,
+		// Info:		info,
+		ItemDetail: itemDetail,
 		Header: 	header,
 		Footer:		footer,
 	}
@@ -112,7 +127,8 @@ func New() *Gui {
 		Panels: []tview.Primitive{
 			tables,
 			items,
-			info,
+			// info,
+			itemDetail,
 		},
 	}
 
@@ -123,7 +139,8 @@ func (g *Gui) Run() error {
 	mainGrid := tview.NewGrid().SetRows(0, 0, 0).SetColumns(30, 0).
 		AddItem(g.Tables, 0, 0, 3, 1, 0, 0, true).
 		AddItem(g.Items, 0, 1, 2, 1, 0, 0, true).
-		AddItem(g.Info, 2, 1, 1, 1, 0, 0, true)
+		// AddItem(g.Info, 2, 1, 1, 1, 0, 0, true)
+		AddItem(g.ItemDetail, 2, 1, 1, 1, 0, 0, true)
 
 	grid := tview.NewGrid().
 		SetRows(0).
@@ -134,7 +151,8 @@ func (g *Gui) Run() error {
 
 	g.tableListKeybind()
 	g.itemsKeybindings()
-	g.infoKeybinding()
+	// g.infoKeybinding()
+	g.itemDetailKeybinding()
 
 	if err := g.App.SetRoot(g.Pages, true).SetFocus(g.Tables).Run(); err != nil {
 		g.App.Stop()

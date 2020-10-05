@@ -2,7 +2,6 @@ package gui
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +15,9 @@ import (
 type Items struct {
 	*tview.Table
 	ItemArray	[]Item
+	HashKey		string
+	SortKey		string
+	Attributes	[]interface{}
 }
 
 type Item struct {
@@ -43,7 +45,6 @@ func (i *Items) Selecting() *Item {
 	if row < 0 {
 		return nil
 	}
-	fmt.Println(row)
 	return &i.ItemArray[row-1]
 }
 
@@ -69,6 +70,9 @@ func (items *Items) scanItems(name string) {
 			sortKey = *s.AttributeName
 		}
 	}
+
+	items.HashKey = hashKey
+	items.SortKey = sortKey
 
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(name),
@@ -99,6 +103,7 @@ func (items *Items) scanItems(name string) {
 	}
 	keyArray := keys.ToSlice()
 	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
+	items.Attributes = keyArray
 
 	t := items.Clear()
 
