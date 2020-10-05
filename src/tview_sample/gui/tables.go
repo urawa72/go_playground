@@ -5,18 +5,18 @@ import (
     "github.com/rivo/tview"
 )
 
-type TableList struct {
+type Tables struct {
 	*tview.Table
-	Tables []string
+	NameArray []string
 }
 
-func (t *TableList) Selected() string {
+func (t *Tables) Selected() string {
 	row, _ := t.GetSelection()
-	return t.Tables[row]
+	return t.NameArray[row]
 }
 
-func NewTableList() *TableList {
-	t := &TableList{
+func NewTables() *Tables {
+	t := &Tables{
 		Table: tview.NewTable().Select(0, 0).SetFixed(1, 1).SetSelectable(true, false),
 	}
     t.SetBorder(true).SetTitle("Tables").SetTitleAlign(tview.AlignLeft)
@@ -27,7 +27,7 @@ func NewTableList() *TableList {
     table := t.Clear()
 	for i, name := range result.TableNames {
 		table.SetCell(i, 0, tview.NewTableCell(*name))
-		t.Tables = append(t.Tables, *name)
+		t.NameArray = append(t.NameArray, *name)
 	}
 
 	return t

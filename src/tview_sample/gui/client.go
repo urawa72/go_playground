@@ -6,13 +6,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-var Client *DbClient
+var Client *DynamodbClient
 
-type DbClient struct {
+type DynamodbClient struct {
 	*dynamodb.DynamoDB
 }
 
-func NewDbClient() *DbClient {
+func NewClient() *DynamodbClient {
     sess := session.Must(session.NewSessionWithOptions(session.Options{
 		Profile: "default",
 		SharedConfigState: session.SharedConfigEnable,
@@ -23,7 +23,7 @@ func NewDbClient() *DbClient {
 		aws.NewConfig().WithEndpoint("http://localhost:8000"),
 	)
 
-	Client = &DbClient{svc}
+	Client = &DynamodbClient{svc}
 
 	return Client
 }

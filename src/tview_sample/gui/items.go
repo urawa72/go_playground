@@ -13,14 +13,13 @@ import (
 	"github.com/rivo/tview"
 )
 
-type Records struct {
+type Items struct {
 	*tview.Table
-	Items	[]Item
+	ItemArray	[]Item
 }
 
-type KeyDetail struct {
-	KeyType string
-	AttributeType *string
+type Item struct {
+	Data map[string]interface{}
 }
 
 var header = []string{
@@ -28,33 +27,33 @@ var header = []string{
 	"SORT",
 }
 
-func NewRecords() *Records {
-	r := &Records{
+func NewItems() *Items {
+	i := &Items{
 		Table: tview.NewTable().Select(0, 0).SetSelectable(true, true),
 	}
-    r.SetBorder(true).SetTitle("Items").SetTitleAlign(tview.AlignLeft)
-	return r
+    i.SetBorder(true).SetTitle("Items").SetTitleAlign(tview.AlignLeft)
+	return i
 }
 
-func (r *Records) Selecting() *Item {
-	if len(r.Items) == 0 {
+func (i *Items) Selecting() *Item {
+	if len(i.ItemArray) == 0 {
 		return nil
 	}
-	row, _ := r.GetSelection()
+	row, _ := i.GetSelection()
 	if row < 0 {
 		return nil
 	}
 	fmt.Println(row)
-	return &r.Items[row-1]
+	return &i.ItemArray[row-1]
 }
 
-func (r *Records) UpdateView(g *Gui) {
-	tableName := g.TableList.Selected()
-	r.scanItems(tableName)
+func (i *Items) UpdateView(g *Gui) {
+	tableName := g.Tables.Selected()
+	i.scanItems(tableName)
 	g.nextPanel()
 }
 
-func (r *Records) scanItems(name string) {
+func (items *Items) scanItems(name string) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	}
@@ -81,19 +80,19 @@ func (r *Records) scanItems(name string) {
 		panic(err)
 	}
 
-    r.Items = []Item{}
+    items.ItemArray = []Item{}
 
 	for _, item := range result.Items {
-		var i Item
-		err = dynamodbattribute.UnmarshalMap(item, &i.Data)
+		var tmp Item
+		err = dynamodbattribute.UnmarshalMap(item, &tmp.Data)
 		if err != nil {
 			panic(err)
 		}
-		r.Items = append(r.Items, i)
+		items.ItemArray = append(items.ItemArray, tmp)
 	}
 
 	keys := mapset.NewSet()
-	for _, item := range r.Items {
+	for _, item := range items.ItemArray {
 		for k, _ := range item.Data {
 			keys.Add(k)
 		}
@@ -101,7 +100,7 @@ func (r *Records) scanItems(name string) {
 	keyArray := keys.ToSlice()
 	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
 
-	t := r.Clear()
+	t := items.Clear()
 
 	c := 0
 	t.SetCell(0, c, &tview.TableCell{
@@ -131,12 +130,12 @@ func (r *Records) scanItems(name string) {
 		})
 	}
 
-	for i, item := range r.Items {
+	for i, item := range items.ItemArray {
 		c := 0
-		t.SetCell(i+1, c, tview.NewTableCell(item.Data[hashKey].(string)))
+		t.SetCell(i+1, c, tview.NewTableCell(item.Data[hashKey].(string)).SetMaxWidth(20))
 		if sortKey != "" {
 			c++
-			t.SetCell(i+1, c, tview.NewTableCell(item.Data[sortKey].(string)))
+			t.SetCell(i+1, c, tview.NewTableCell(item.Data[sortKey].(string)).SetMaxWidth(20))
 		}
 		for j, key := range keyArray {
 			if key == hashKey || key == sortKey {
@@ -149,31 +148,8 @@ func (r *Records) scanItems(name string) {
 				if err != nil {
 					panic(err)
 				}
-				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)))
+				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)).SetMaxWidth(20))
 			}
 		}
 	}
-
-	// for i, item := range r.Items {
-	// 	var hKey string
-	// 	var sKey string
-	// 	for k, v := range item.Data {
-	// 		j, err := json.Marshal(v)
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
-	// 		if hashKey == string(k) {
-	// 			hKey = string(j)
-	// 		}
-	// 		if sortKey == string(k) {
-	// 			sKey = string(j)
-	// 		}
-	// 	}
-	// 	t.SetCell(i+1, 0, tview.NewTableCell(hKey))
-	// 	t.SetCell(i+1, 1, tview.NewTableCell(sKey))
-	// }
-}
-
-type Item struct {
-	Data map[string]interface{}
 }

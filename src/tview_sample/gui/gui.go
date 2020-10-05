@@ -3,16 +3,15 @@ package gui
 import (
 	"fmt"
 
-	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
 type Gui struct {
 	App			*tview.Application
 	Pages		*tview.Pages
-	TableList	*TableList
-	Records		*Records
-	ItemDetail	*ItemDetail
+	Tables		*Tables
+	Items		*Items
+	Info		*Info
 	Header		*tview.TextView
 	Footer		*tview.TextView
 	Panels
@@ -31,42 +30,6 @@ func (g *Gui) nextPanel() {
 	idx := (g.Panels.Current + 1) % len(g.Panels.Panels)
 	g.Panels.Current = idx
 	g.switchPanel(g.Panels.Panels[g.Panels.Current])
-}
-
-func (g *Gui) globalKeybind(event *tcell.EventKey) {
-	switch event.Key() {
-	case tcell.KeyTab:
-		g.nextPanel()
-	}
-}
-
-func (g *Gui) tableListKeybind() {
-	g.TableList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEnter {
-			g.Records.UpdateView(g)
-		}
-        switch event.Rune() {
-        case 'P':
-			g.PutItem("Modal Test", "OK", g.TableList)
-		}
-		g.globalKeybind(event)
-		return event
-	})
-}
-
-
-func (g *Gui) recordsKeybindings() {
-    g.Records.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		g.globalKeybind(event)
-		return event
-	})
-}
-
-func (g *Gui) itemDetailKeybinding() {
-	g.ItemDetail.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		g.globalKeybind(event)
-		return event
-	})
 }
 
 func convertParams(f *tview.Form) {
@@ -100,10 +63,10 @@ func (g *Gui) PutItem(message, doneLabel string, primitive tview.Primitive) {
 		}).
 		AddButton("Execute", func() {
 			convertParams(form)
-			g.CloseAndSwitchPanel("form", g.TableList)
+			g.CloseAndSwitchPanel("form", g.Tables)
 		}).
 		AddButton("Cancel", func() {
-			g.CloseAndSwitchPanel("form", g.TableList)
+			g.CloseAndSwitchPanel("form", g.Tables)
 		})
 
 	g.Pages.AddAndSwitchToPage("form", g.Modal(form, 50, 29), true).ShowPage("main")
@@ -128,28 +91,28 @@ func New() *Gui {
 	footer := tview.NewTextView().SetDynamicColors(true)
     footer.SetTitleAlign(tview.AlignLeft).SetTitle("Footer")
 
-	NewDbClient()
+	NewClient()
 
-	tableList := NewTableList()
+	tables := NewTables()
 
-	records := NewRecords()
+	items := NewItems()
 
-	itemDetail := NewItemDetail()
+	info := NewInfo()
 
 	g := &Gui {
 		App:		tview.NewApplication(),
-		TableList:	tableList,
-		Records: 	records,
-		ItemDetail:	itemDetail,
+		Tables:		tables,
+		Items: 		items,
+		Info:		info,
 		Header: 	header,
 		Footer:		footer,
 	}
 
 	g.Panels = Panels{
 		Panels: []tview.Primitive{
-			tableList,
-			records,
-			itemDetail,
+			tables,
+			items,
+			info,
 		},
 	}
 
@@ -158,9 +121,9 @@ func New() *Gui {
 
 func (g *Gui) Run() error {
 	mainGrid := tview.NewGrid().SetRows(0, 0, 0).SetColumns(30, 0).
-		AddItem(g.TableList, 0, 0, 3, 1, 0, 0, true).
-		AddItem(g.Records, 0, 1, 2, 1, 0, 0, true).
-		AddItem(g.ItemDetail, 2, 1, 1, 1, 0, 0, true)
+		AddItem(g.Tables, 0, 0, 3, 1, 0, 0, true).
+		AddItem(g.Items, 0, 1, 2, 1, 0, 0, true).
+		AddItem(g.Info, 2, 1, 1, 1, 0, 0, true)
 
 	grid := tview.NewGrid().
 		SetRows(0).
@@ -170,10 +133,10 @@ func (g *Gui) Run() error {
 	g.Pages = tview.NewPages().AddAndSwitchToPage("main", grid, true)
 
 	g.tableListKeybind()
-	g.recordsKeybindings()
-	g.itemDetailKeybinding()
+	g.itemsKeybindings()
+	g.infoKeybinding()
 
-	if err := g.App.SetRoot(g.Pages, true).SetFocus(g.TableList).Run(); err != nil {
+	if err := g.App.SetRoot(g.Pages, true).SetFocus(g.Tables).Run(); err != nil {
 		g.App.Stop()
 		return err
 	}
