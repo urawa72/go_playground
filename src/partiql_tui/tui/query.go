@@ -12,12 +12,12 @@ type QueryView struct {
 }
 
 func NewQueryView() *QueryView {
-	t := &QueryView{
+	qv := &QueryView{
 		InputField: tview.NewInputField(),
 	}
-	t.SetTitle("Query").SetTitleAlign(tview.AlignLeft)
-	t.SetBorder(true)
-	t.SetFieldBackgroundColor(tcell.ColorBlack)
+	qv.SetTitle("Query").SetTitleAlign(tview.AlignLeft)
+	qv.SetBorder(true)
+	qv.SetFieldBackgroundColor(tcell.ColorBlack)
 
-	return t
+	return qv
 }
