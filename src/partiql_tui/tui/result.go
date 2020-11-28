@@ -1,16 +1,14 @@
 package tui
 
 import (
-	// "encoding/json"
 	"bytes"
 	"encoding/json"
 	"errors"
-	// "fmt"
 	"os/exec"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/deckarep/golang-set"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -18,8 +16,8 @@ import (
 
 type ResultView struct {
 	*tview.Table
-	ItemArray	[]Item
-	Keys		[]interface{}
+	ItemArray []Item
+	Keys      []interface{}
 }
 
 type Item struct {
@@ -30,16 +28,11 @@ type Items struct {
 	Items []map[string]interface{}
 }
 
-var header = []string{
-	"HASH",
-	"SORT",
-}
-
 func NewResultView() *ResultView {
 	rv := &ResultView{
 		Table: tview.NewTable().Select(0, 0).SetSelectable(true, true),
 	}
-    rv.SetBorder(true).SetTitle("Results").SetTitleAlign(tview.AlignLeft)
+	rv.SetBorder(true).SetTitle("Results").SetTitleAlign(tview.AlignLeft)
 	return rv
 }
 
@@ -49,17 +42,15 @@ func (rv *ResultView) UpdateView(t *Tui) {
 	err := rv.RunCmd(t.QueryView.Query)
 	if err != nil {
 		table.SetCell(0, 0, &tview.TableCell{
-			Text:				err.Error(),
-			NotSelectable:		true,
-			Align:				tview.AlignLeft,
-			Color:				tcell.ColorYellow,
-			BackgroundColor:	tcell.ColorDefault,
+			Text:            err.Error(),
+			NotSelectable:   true,
+			Align:           tview.AlignLeft,
+			Color:           tcell.ColorYellow,
+			BackgroundColor: tcell.ColorDefault,
 		})
 		return
 	}
 	rv.DrawResults()
-	// fmt.Println(rv.Keys)
-	// fmt.Println(rv.ItemArray)
 }
 
 func (rv *ResultView) RunCmd(sql string) error {
@@ -94,7 +85,6 @@ func (rv *ResultView) RunCmd(sql string) error {
 		list = append(list, item)
 	}
 
-	// header
 	keys := mapset.NewSet()
 	for _, item := range list {
 		for k := range item.Item {
@@ -102,10 +92,9 @@ func (rv *ResultView) RunCmd(sql string) error {
 		}
 	}
 	keyArray := keys.ToSlice()
-	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
+	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) < keyArray[j].(string) })
 	rv.Keys = keyArray
 
-	// values
 	rv.ItemArray = list
 	return nil
 }
@@ -115,11 +104,11 @@ func (rv *ResultView) DrawResults() {
 	c := 0
 	for i, h := range rv.Keys {
 		t.SetCell(0, c+i, &tview.TableCell{
-			Text:				h.(string),
-			NotSelectable:		true,
-			Align:				tview.AlignLeft,
-			Color:				tcell.ColorYellow,
-			BackgroundColor:	tcell.ColorDefault,
+			Text:            h.(string),
+			NotSelectable:   true,
+			Align:           tview.AlignLeft,
+			Color:           tcell.ColorYellow,
+			BackgroundColor: tcell.ColorDefault,
 		})
 	}
 
@@ -133,12 +122,8 @@ func (rv *ResultView) DrawResults() {
 				if err != nil {
 					return
 				}
-				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)).SetMaxWidth(20))
+				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)))
 			}
 		}
 	}
 }
-
-// func (rv *ResultView) executeQuery(sql string) {
-//
-// }

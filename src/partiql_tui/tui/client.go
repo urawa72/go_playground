@@ -8,13 +8,8 @@ import (
 
 var Client *dynamodb.DynamoDB
 
-// type DynamodbClient struct {
-// 	*dynamodb.DynamoDB
-// }
-
-func NewClient() *dynamodb.DynamoDB {
+func NewClient() {
     sess := session.Must(session.NewSessionWithOptions(session.Options{
-		// Profile: "kobayashi.yuki",
 		SharedConfigState: session.SharedConfigEnable,
 	}))
 
@@ -24,7 +19,4 @@ func NewClient() *dynamodb.DynamoDB {
 	)
 
 	Client = svc
-	// Client = &DynamodbClient{svc}
-
-	return Client
 }

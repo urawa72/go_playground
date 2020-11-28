@@ -1,7 +1,6 @@
 package tui
 
 import (
-	// "github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )

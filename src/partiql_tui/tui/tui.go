@@ -20,7 +20,7 @@ type Panels struct {
 }
 
 func New() *Tui {
-	// NewClient()
+	NewClient()
 	queryView := NewQueryView()
 	resultView := NewResultView()
 	infoView := NewInfoView()
@@ -42,30 +42,45 @@ func New() *Tui {
 	return t
 }
 
+func (t *Tui) switchPanel(p tview.Primitive) *tview.Application {
+	return t.App.SetFocus(p)
+}
+
+func (t *Tui) nextPanel() {
+	idx := (t.Panels.Current + 1) % len(t.Panels.Panels)
+	t.Panels.Current = idx
+	t.switchPanel(t.Panels.Panels[t.Panels.Current])
+}
+
+func (t *Tui) panelKeybindings(event *tcell.EventKey) {
+	switch event.Key() {
+	case tcell.KeyTab:
+		t.nextPanel()
+	}
+}
+
 func (t *Tui) queryKeybindings() {
  	t.QueryView.SetDoneFunc(func(key tcell.Key) {
 		switch key {
-		case tcell.KeyEscape:
-			// g.App.Stop()
 		case tcell.KeyEnter:
 			text := t.QueryView.GetText()
 			t.QueryView.Query = text
 			t.ResultView.UpdateView(t)
-			// g.nextPanel()
 		}
 	}).SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// g.GrobalKeybind(event)
+		t.panelKeybindings(event)
+		return event
+	})
+}
+
+func (t *Tui) resultKeybindings() {
+    t.ResultView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		t.panelKeybindings(event)
 		return event
 	})
 }
 
 func (t *Tui) Run() error {
-	// result, err := runCmd()
-	// if err != nil {
-	// 	panic("error")
-	// }
-	// fmt.Println(result)
-
 	grid := tview.NewGrid().
 		SetRows(3, 0, 4).
 		AddItem(t.QueryView, 0, 0, 1, 1, 0, 0, true).
@@ -75,10 +90,7 @@ func (t *Tui) Run() error {
 	t.Pages = tview.NewPages().AddAndSwitchToPage("main", grid, true)
 
 	t.queryKeybindings()
-	// t.tableListKeybind()
-	// t.itemsKeybindings()
-	// t.infoKeybinding()
-	// t.itemDetailKeybinding()
+	t.resultKeybindings()
 
 	if err := t.App.SetRoot(t.Pages, true).SetFocus(t.QueryView).Run(); err != nil {
 		t.App.Stop()
