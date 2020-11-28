@@ -25,6 +25,10 @@ type ResultView struct {
 }
 
 type Item struct {
+	Item map[string]interface{}
+}
+
+type Items struct {
 	Items []map[string]interface{}
 }
 
@@ -44,9 +48,13 @@ func NewResultView() *ResultView {
 func (rv *ResultView) UpdateView(t *Tui) {
 	table := rv.Clear()
 
-	result, err := rv.RunCmd(t.QueryView.Query)
+	var result string
+
+	json, err := rv.RunCmd(t.QueryView.Query)
 	if err != nil {
-		panic("error")
+		result = err.Error()
+	} else {
+		result = json
 	}
 
 	table.SetCell(0, 0, &tview.TableCell{
@@ -68,13 +76,21 @@ func (rv *ResultView) RunCmd(sql string) (string, error) {
 	}
 
 	jsonStr := []byte(buf.String())
-	var item Item
-	if err := json.Unmarshal(jsonStr, &item); err != nil {
+	var items Items
+	if err := json.Unmarshal(jsonStr, &items); err != nil {
 		fmt.Println("Errrr!")
 	}
 
-	for _, m := range item.Items {
-		fmt.Println(m)
+	// list, _ := dynamodbattribute.MarshalList(item.Items)
+	for _, item := range items.Items {
+		res, err := dynamodbattribute.MarshalMap(item)
+		if err != nil {
+			panic(err)
+		}
+		var tmp Item
+		err = dynamodbattribute.UnmarshalMap(res, &tmp.Item)
+		fmt.Println(res)
+		// items.ItemArray = append(items.ItemArray, tmp)
 	}
 
 	return buf.String(), nil
