@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
+	// "fmt"
 	"os/exec"
+	"sort"
 
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	// "github.com/deckarep/golang-set"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/deckarep/golang-set"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -19,9 +19,7 @@ import (
 type ResultView struct {
 	*tview.Table
 	ItemArray	[]Item
-	HashKey		string
-	SortKey		string
-	Attributes	[]interface{}
+	Keys		[]interface{}
 }
 
 type Item struct {
@@ -48,52 +46,97 @@ func NewResultView() *ResultView {
 func (rv *ResultView) UpdateView(t *Tui) {
 	table := rv.Clear()
 
-	var result string
-
-	json, err := rv.RunCmd(t.QueryView.Query)
+	err := rv.RunCmd(t.QueryView.Query)
 	if err != nil {
-		result = err.Error()
-	} else {
-		result = json
+		table.SetCell(0, 0, &tview.TableCell{
+			Text:				err.Error(),
+			NotSelectable:		true,
+			Align:				tview.AlignLeft,
+			Color:				tcell.ColorYellow,
+			BackgroundColor:	tcell.ColorDefault,
+		})
+		return
 	}
-
-	table.SetCell(0, 0, &tview.TableCell{
-		Text:				result,
-		NotSelectable:		true,
-		Align:				tview.AlignLeft,
-		Color:				tcell.ColorYellow,
-		BackgroundColor:	tcell.ColorDefault,
-	})
+	rv.DrawResults()
+	// fmt.Println(rv.Keys)
+	// fmt.Println(rv.ItemArray)
 }
 
-func (rv *ResultView) RunCmd(sql string) (string, error) {
+func (rv *ResultView) RunCmd(sql string) error {
 	buf := bytes.Buffer{}
 	cmd := exec.Command("aws", "dynamodb", "execute-statement", "--statement", sql)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
-		return "", errors.New(buf.String())
+		return errors.New(buf.String())
 	}
 
 	jsonStr := []byte(buf.String())
 	var items Items
 	if err := json.Unmarshal(jsonStr, &items); err != nil {
-		fmt.Println("Errrr!")
+		return err
 	}
 
-	// list, _ := dynamodbattribute.MarshalList(item.Items)
-	for _, item := range items.Items {
-		res, err := dynamodbattribute.MarshalMap(item)
-		if err != nil {
-			panic(err)
+	var list []Item
+	for _, m := range items.Items {
+		values := make(map[string]*dynamodb.AttributeValue)
+		for k, mp := range m {
+			var ddbAttr dynamodb.AttributeValue
+			bytes, err := json.Marshal(mp)
+			if err != nil {
+				return err
+			}
+			json.Unmarshal(bytes, &ddbAttr)
+			values[k] = &ddbAttr
 		}
-		var tmp Item
-		err = dynamodbattribute.UnmarshalMap(res, &tmp.Item)
-		fmt.Println(res)
-		// items.ItemArray = append(items.ItemArray, tmp)
+		var item Item
+		dynamodbattribute.UnmarshalMap(values, &item.Item)
+		list = append(list, item)
 	}
 
-	return buf.String(), nil
+	// header
+	keys := mapset.NewSet()
+	for _, item := range list {
+		for k := range item.Item {
+			keys.Add(k)
+		}
+	}
+	keyArray := keys.ToSlice()
+	sort.Slice(keyArray, func(i, j int) bool { return keyArray[i].(string) <  keyArray[j].(string) })
+	rv.Keys = keyArray
+
+	// values
+	rv.ItemArray = list
+	return nil
+}
+
+func (rv *ResultView) DrawResults() {
+	t := rv.Clear()
+	c := 0
+	for i, h := range rv.Keys {
+		t.SetCell(0, c+i, &tview.TableCell{
+			Text:				h.(string),
+			NotSelectable:		true,
+			Align:				tview.AlignLeft,
+			Color:				tcell.ColorYellow,
+			BackgroundColor:	tcell.ColorDefault,
+		})
+	}
+
+	for i, item := range rv.ItemArray {
+		c := 0
+		for j, key := range rv.Keys {
+			if item.Item[key.(string)] == nil {
+				t.SetCell(i+1, c+j, tview.NewTableCell(""))
+			} else {
+				json, err := json.Marshal(item.Item[key.(string)])
+				if err != nil {
+					return
+				}
+				t.SetCell(i+1, c+j, tview.NewTableCell(string(json)).SetMaxWidth(20))
+			}
+		}
+	}
 }
 
 // func (rv *ResultView) executeQuery(sql string) {
