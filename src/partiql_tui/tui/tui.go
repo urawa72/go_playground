@@ -20,7 +20,7 @@ type Panels struct {
 }
 
 func New() *Tui {
-	NewClient()
+	// NewClient()
 	queryView := NewQueryView()
 	resultView := NewResultView()
 	infoView := NewInfoView()

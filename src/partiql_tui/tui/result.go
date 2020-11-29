@@ -45,7 +45,7 @@ func (rv *ResultView) UpdateView(t *Tui) {
 			Text:            err.Error(),
 			NotSelectable:   true,
 			Align:           tview.AlignLeft,
-			Color:           tcell.ColorYellow,
+			Color:           tcell.ColorRed,
 			BackgroundColor: tcell.ColorDefault,
 		})
 		return
